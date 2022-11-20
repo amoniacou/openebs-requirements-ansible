@@ -1,0 +1,26 @@
+- name: Setup ebs nodes
+  hosts: ebs_nodes
+  tasks:
+    - name: Install required packages
+      ansible.builtin.package:
+        name:
+          - lvm2
+          - open-iscsi
+          - parted
+        state: latest
+    - name: Create data parttition
+      community.general.parted:
+        device: /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi1
+        number: 1
+        label: gpt
+        flags: [ lvm ]
+        state: present
+    - name: Create data logic volume
+      community.general.lvg:
+        vg: data
+        pvs: /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi1-part1
+    - name: Create data volume
+      community.general.lvol:
+        vg: data
+        lv: data
+        size: 100%FREE
